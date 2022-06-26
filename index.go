@@ -10,11 +10,6 @@ import (
 
 type recordID uint64
 
-type indexRecord struct {
-	id     recordID
-	offset recordOffset
-}
-
 // index will store mapping between recordID and recordOffset
 // it will maintain it in memory and in index file
 type index struct {
@@ -34,22 +29,21 @@ func (i *index) write(offset recordOffset) (recordID, error) {
 		return 0, ErrNoIndexSpaceLeft
 	}
 
+	// TODO: make move to nextID
 	i.lastID++
-	ir := indexRecord{id: i.lastID, offset: offset}
 
-	err := binary.Write(i.f, binary.BigEndian, ir.id)
+	b := make([]byte, 16)
+	binary.BigEndian.PutUint64(b[0:8], uint64(i.lastID))
+	binary.BigEndian.PutUint64(b[8:16], uint64(offset))
+
+	_, err := i.f.Write(b)
 	if err != nil {
 		return 0, err
 	}
 
-	err = binary.Write(i.f, binary.BigEndian, ir.offset)
-	if err != nil {
-		return 0, err
-	}
-
+	i.mmap[i.lastID] = offset
 	i.size += 16
 
-	i.mmap[ir.id] = ir.offset
 	return i.lastID, i.f.Sync()
 }
 

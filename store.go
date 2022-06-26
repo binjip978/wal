@@ -84,17 +84,16 @@ func (s *store) write(data []byte) (recordOffset, error) {
 		return 0, ErrNoStoreSpaceLeft
 	}
 
-	err := binary.Write(s.file, binary.BigEndian, uint64(len(data)))
+	b := make([]byte, 8+len(data))
+	binary.BigEndian.PutUint64(b[0:8], uint64(len(data)))
+	copy(b[8:], data)
+
+	n, err := s.file.Write(b)
 	if err != nil {
 		return 0, err
 	}
 
-	n, err := s.file.Write(data)
-	if err != nil {
-		return 0, err
-	}
-
-	if n != len(data) {
+	if n != len(data)+8 {
 		return 0, fmt.Errorf("can't write all data")
 	}
 
@@ -104,7 +103,7 @@ func (s *store) write(data []byte) (recordOffset, error) {
 	}
 
 	offset := recordOffset(s.size)
-	s.size += uint64(n + 8)
+	s.size += uint64(n)
 
 	return offset, nil
 }
