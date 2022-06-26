@@ -4,7 +4,39 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 )
+
+func BenchmarkWrite16(b *testing.B) {
+	benchmarkWrite([]byte("0123456789ABCDEF"), b)
+}
+
+func BenchmarkWrite8(b *testing.B) {
+	benchmarkWrite([]byte("012345678"), b)
+}
+
+func BenchmarkWrite32(b *testing.B) {
+	benchmarkWrite([]byte("0123456789ABCDEF0123456789ABCDEF"), b)
+}
+
+func benchmarkWrite(msg []byte, b *testing.B) {
+	b.StopTimer()
+	time.Sleep(2 * time.Second)
+	tempDir, _ := ioutil.TempDir("", "wal-bench")
+	defer os.RemoveAll(tempDir)
+	cfg := Config{}
+	cfg.Segment.MaxIndexSizeBytes = 4 * 2 << 20
+	cfg.Segment.MaxStoreSizeBytes = 16 * 2 << 20
+	log, _ := New(tempDir, cfg)
+
+	b.StartTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = log.Append(msg)
+	}
+	b.StopTimer()
+
+	log.Close()
+}
 
 func TestWalEmptyDir(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "wal-test")

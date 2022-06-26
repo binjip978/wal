@@ -34,8 +34,6 @@ var (
 func New(dir string, cfg Config) (*WAL, error) {
 	cfg = configDefautls(cfg)
 
-	fmt.Println(cfg)
-
 	fNames, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
