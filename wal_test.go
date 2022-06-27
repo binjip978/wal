@@ -1,8 +1,11 @@
 package wal
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -132,4 +135,52 @@ func TestConfigDefaults(t *testing.T) {
 	if cfg.Segment.MaxStoreSizeBytes != 2000 {
 		t.Error("should not change non zero value")
 	}
+}
+
+func TestConcurentAppends(t *testing.T) {
+	cfg := configDefautls(Config{})
+	cfg.Segment.MaxIndexSizeBytes = 1 * 2 << 20
+	cfg.Segment.MaxStoreSizeBytes = 1 * 2 << 20
+	tempDir, err := ioutil.TempDir("", "wal-conc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	wal, err := New(tempDir, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wg := &sync.WaitGroup{}
+
+	appender := func(t *testing.T, w *WAL, id string, wg *sync.WaitGroup) {
+		results := make(map[uint64][]byte)
+		defer wg.Done()
+		for i := 0; i < 5; i++ {
+			payload := []byte(fmt.Sprintf("%s-%d", id, i))
+			id, err := w.Append(payload)
+			if err != nil {
+				t.Error(err)
+			}
+			results[id] = payload
+		}
+
+		for k, v := range results {
+			data, err := w.Read(k)
+			if err != nil {
+				t.Error(err)
+			}
+			if !bytes.Equal(v, data) {
+				t.Error("no equal")
+			}
+		}
+	}
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go appender(t, wal, fmt.Sprintf("go-%d", i), wg)
+	}
+
+	wg.Wait()
 }
