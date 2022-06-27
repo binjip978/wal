@@ -16,9 +16,9 @@ type index struct {
 	mu      sync.Mutex
 	mmap    map[recordID]recordOffset
 	f       *os.File
-	lastID  recordID
 	size    uint64
 	maxSize uint64
+	id      recordID
 }
 
 func (i *index) write(offset recordOffset) (recordID, error) {
@@ -29,11 +29,8 @@ func (i *index) write(offset recordOffset) (recordID, error) {
 		return 0, ErrNoIndexSpaceLeft
 	}
 
-	// TODO: make move to nextID
-	i.lastID++
-
 	b := make([]byte, 16)
-	binary.BigEndian.PutUint64(b[0:8], uint64(i.lastID))
+	binary.BigEndian.PutUint64(b[0:8], uint64(i.id))
 	binary.BigEndian.PutUint64(b[8:16], uint64(offset))
 
 	_, err := i.f.Write(b)
@@ -41,10 +38,11 @@ func (i *index) write(offset recordOffset) (recordID, error) {
 		return 0, err
 	}
 
-	i.mmap[i.lastID] = offset
+	i.mmap[i.id] = offset
 	i.size += 16
+	i.id++
 
-	return i.lastID, i.f.Sync()
+	return i.id - 1, i.f.Sync()
 }
 
 func (i *index) read(id recordID) (recordOffset, error) {
@@ -112,7 +110,7 @@ func newIndex(file string, cfg Config) (*index, error) {
 		mu:      sync.Mutex{},
 		mmap:    mmap,
 		f:       f,
-		lastID:  lastID,
+		id:      lastID,
 		size:    uint64(len(b)),
 		maxSize: cfg.Segment.MaxIndexSizeBytes,
 	}, nil

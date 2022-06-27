@@ -1,33 +1,25 @@
 package wal
 
-import (
-	"sync"
-)
-
 type segment struct {
-	mu    sync.Mutex
 	idx   *index
 	store *store
 }
 
-func (s *segment) read(id recordID) (record, error) {
+func (s *segment) read(id recordID) ([]byte, error) {
 	offset, err := s.idx.read(id)
 	if err != nil {
-		return record{}, nil
+		return nil, err
 	}
 
-	b, err := s.store.read(offset)
+	data, err := s.store.read(offset)
 	if err != nil {
-		return record{}, nil
+		return nil, err
 	}
 
-	return record{id: id, data: b}, nil
+	return data, nil
 }
 
 func (s *segment) write(data []byte) (recordID, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	offset, err := s.store.write(data)
 	if err != nil {
 		return 0, err
@@ -42,9 +34,6 @@ func (s *segment) write(data []byte) (recordID, error) {
 }
 
 func (s *segment) close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	err := s.idx.close()
 	if err != nil {
 		return err
@@ -70,7 +59,6 @@ func newSegment(indexFile string, storeFile string, cfg Config) (*segment, error
 	}
 
 	return &segment{
-		mu:    sync.Mutex{},
 		idx:   index,
 		store: store,
 	}, nil

@@ -41,14 +41,11 @@ func TestSegmentReadWrite(t *testing.T) {
 	}
 
 	for i, id := range ids {
-		r, err := segment.read(id)
+		data, err := segment.read(id)
 		if err != nil {
 			t.Error(err)
 		}
-		if r.id != id {
-			t.Error("id is not the same")
-		}
-		if string(r.data) != messages[i] {
+		if string(data) != messages[i] {
 			t.Error("data is not the same")
 		}
 	}

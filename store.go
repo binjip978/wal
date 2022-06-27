@@ -10,13 +10,6 @@ import (
 
 type recordOffset uint64
 
-// record defines unit of the log it store the record size and record
-// data, recordID is stored in the index as a mapping recordID -> recordOffSet
-type record struct {
-	id   recordID
-	data []byte
-}
-
 // store defines a storage abstraction for the log
 // log is append only file
 type store struct {

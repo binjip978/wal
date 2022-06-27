@@ -96,12 +96,7 @@ func (w *WAL) Append(data []byte) (uint64, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	offset, err := w.activeSegment.store.write(data)
-	if err != nil {
-		return 0, err
-	}
-
-	id, err := w.activeSegment.idx.write(offset)
+	id, err := w.activeSegment.write(data)
 	if err != nil {
 		return 0, err
 	}
@@ -113,12 +108,7 @@ func (w *WAL) Read(id uint64) ([]byte, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	offset, err := w.activeSegment.idx.read(recordID(id))
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := w.activeSegment.store.read(offset)
+	data, err := w.activeSegment.read(recordID(id))
 	if err != nil {
 		return nil, err
 	}
