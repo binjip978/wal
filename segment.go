@@ -47,6 +47,15 @@ func (s *segment) close() error {
 	return nil
 }
 
+func (s *segment) remove() error {
+	err := s.idx.remove()
+	if err != nil {
+		return err
+	}
+
+	return s.store.remove()
+}
+
 func newSegment(indexFile string, storeFile string, cfg Config) (*segment, error) {
 	index, err := newIndex(indexFile, cfg)
 	if err != nil {

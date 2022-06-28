@@ -107,3 +107,10 @@ func (s *store) close() error {
 
 	return s.file.Close()
 }
+
+func (s *store) remove() error {
+	s.mu.Lock()
+	s.mu.Unlock()
+
+	return os.Remove(s.file.Name())
+}

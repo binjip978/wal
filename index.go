@@ -64,6 +64,13 @@ func (i *index) close() error {
 	return i.f.Close()
 }
 
+func (i *index) remove() error {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	return os.Remove(i.f.Name())
+}
+
 func newIndex(file string, cfg Config) (*index, error) {
 	_, err := os.Stat(file)
 	if err != nil {

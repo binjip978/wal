@@ -1,6 +1,8 @@
 package wal
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -17,6 +19,7 @@ func TestSegmentReadWrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer os.Remove(storeFile.Name())
 
 	segment, err := newSegment(idxFile.Name(), storeFile.Name(), configDefautls(Config{}))
 	if err != nil {
@@ -48,5 +51,28 @@ func TestSegmentReadWrite(t *testing.T) {
 		if string(data) != messages[i] {
 			t.Error("data is not the same")
 		}
+	}
+}
+
+func TestRemoveSegment(t *testing.T) {
+	i, _ := ioutil.TempFile("", "index-remove")
+	s, _ := ioutil.TempFile("", "store-remove")
+	i.Close()
+	s.Close()
+
+	seg, _ := newSegment(i.Name(), s.Name(), Config{})
+	err := seg.remove()
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = os.Stat(i.Name())
+	if !errors.Is(err, os.ErrNotExist) {
+		fmt.Println(err)
+		t.Error("should delete index file")
+	}
+	_, err = os.Stat(s.Name())
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Error("should delete store file")
 	}
 }
