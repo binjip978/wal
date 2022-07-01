@@ -7,16 +7,7 @@ import (
 	"os"
 	"sync"
 	"testing"
-	"time"
 )
-
-func BenchmarkWrite16(b *testing.B) {
-	benchmarkWrite([]byte("0123456789ABCDEF"), b)
-}
-
-func BenchmarkWrite8(b *testing.B) {
-	benchmarkWrite([]byte("012345678"), b)
-}
 
 func BenchmarkWrite32(b *testing.B) {
 	benchmarkWrite([]byte("0123456789ABCDEF0123456789ABCDEF"), b)
@@ -24,7 +15,6 @@ func BenchmarkWrite32(b *testing.B) {
 
 func benchmarkWrite(msg []byte, b *testing.B) {
 	b.StopTimer()
-	time.Sleep(2 * time.Second)
 	tempDir, _ := ioutil.TempDir("", "wal-bench")
 	defer os.RemoveAll(tempDir)
 	cfg := Config{}
