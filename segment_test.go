@@ -32,7 +32,7 @@ func TestSegmentReadWrite(t *testing.T) {
 		"abc",
 	}
 
-	var ids []recordID
+	var ids []uint64
 
 	for _, message := range messages {
 		id, err := segment.write([]byte(message))

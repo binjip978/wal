@@ -5,7 +5,7 @@ type segment struct {
 	store *store
 }
 
-func (s *segment) read(id recordID) ([]byte, error) {
+func (s *segment) read(id uint64) ([]byte, error) {
 	offset, err := s.idx.read(id)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func (s *segment) read(id recordID) ([]byte, error) {
 	return data, nil
 }
 
-func (s *segment) write(data []byte) (recordID, error) {
+func (s *segment) write(data []byte) (uint64, error) {
 	offset, err := s.store.write(data)
 	if err != nil {
 		return 0, err

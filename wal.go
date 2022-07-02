@@ -108,7 +108,7 @@ func (w *WAL) Read(id uint64) ([]byte, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	data, err := w.activeSegment.read(recordID(id))
+	data, err := w.activeSegment.read(id)
 	if err != nil {
 		return nil, err
 	}

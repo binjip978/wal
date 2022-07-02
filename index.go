@@ -8,20 +8,18 @@ import (
 	"sync"
 )
 
-type recordID uint64
-
 // index will store mapping between recordID and recordOffset
 // it will maintain it in memory and in index file
 type index struct {
 	mu      sync.Mutex
-	mmap    map[recordID]recordOffset
+	mmap    map[uint64]uint64
 	f       *os.File
 	size    uint64
 	maxSize uint64
-	id      recordID
+	id      uint64
 }
 
-func (i *index) write(offset recordOffset) (recordID, error) {
+func (i *index) write(offset uint64) (uint64, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
@@ -45,7 +43,7 @@ func (i *index) write(offset recordOffset) (recordID, error) {
 	return i.id - 1, i.f.Sync()
 }
 
-func (i *index) read(id recordID) (recordOffset, error) {
+func (i *index) read(id uint64) (uint64, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
@@ -88,13 +86,13 @@ func newIndex(file string, cfg Config) (*index, error) {
 	}
 
 	nRecords := len(b) / 16
-	mmap := make(map[recordID]recordOffset)
+	mmap := make(map[uint64]uint64)
 	var i int
-	var lastID recordID
+	var lastID uint64
 
 	for j := 0; j < nRecords; j++ {
-		var id recordID
-		var offset recordOffset
+		var id uint64
+		var offset uint64
 
 		err := binary.Read(bytes.NewReader(b[i:i+8]),
 			binary.BigEndian, &id)

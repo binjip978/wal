@@ -50,8 +50,8 @@ func TestIndexReadWrite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ids := []recordID{}
-	offsets := []recordOffset{0, 10, 21}
+	ids := []uint64{}
+	offsets := []uint64{0, 10, 21}
 
 	for _, offset := range offsets {
 		id, err := i1.write(offset)

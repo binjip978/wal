@@ -8,8 +8,6 @@ import (
 	"sync"
 )
 
-type recordOffset uint64
-
 // store defines a storage abstraction for the log
 // log is append only file
 type store struct {
@@ -40,7 +38,7 @@ func newStore(file string, cfg Config) (*store, error) {
 }
 
 // read takes an offset in a file and returns a record
-func (s *store) read(offset recordOffset) ([]byte, error) {
+func (s *store) read(offset uint64) ([]byte, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -67,7 +65,7 @@ func (s *store) read(offset recordOffset) ([]byte, error) {
 }
 
 // write append the record to the log and return
-func (s *store) write(data []byte) (recordOffset, error) {
+func (s *store) write(data []byte) (uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -95,7 +93,7 @@ func (s *store) write(data []byte) (recordOffset, error) {
 		return 0, err
 	}
 
-	offset := recordOffset(s.size)
+	offset := s.size
 	s.size += uint64(n)
 
 	return offset, nil
@@ -103,14 +101,14 @@ func (s *store) write(data []byte) (recordOffset, error) {
 
 func (s *store) close() error {
 	s.mu.Lock()
-	s.mu.Unlock()
+	defer s.mu.Unlock()
 
 	return s.file.Close()
 }
 
 func (s *store) remove() error {
 	s.mu.Lock()
-	s.mu.Unlock()
+	defer s.mu.Unlock()
 
 	return os.Remove(s.file.Name())
 }

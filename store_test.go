@@ -24,7 +24,7 @@ func TestStoreReadWrite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var offsets []recordOffset
+	var offsets []uint64
 
 	for _, message := range messages {
 		offset, err := s.write([]byte(message))
