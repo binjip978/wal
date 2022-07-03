@@ -17,8 +17,8 @@ type WAL struct {
 }
 
 const (
-	defaultStoreSize = 1024
-	defaultIndexSize = 1024
+	defaultStoreSize = 1 << 10
+	defaultIndexSize = 1 << 10
 )
 
 var (
@@ -32,7 +32,7 @@ var (
 // if no such files present it will create empty them
 // TODO: multiple segments should be supported
 func New(dir string, cfg Config) (*WAL, error) {
-	cfg = configDefautls(cfg)
+	cfg = defaultConfig(cfg)
 
 	fNames, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -130,7 +130,7 @@ func (w *WAL) Close() error {
 	return nil
 }
 
-func configDefautls(cfg Config) Config {
+func defaultConfig(cfg Config) Config {
 	if cfg.Segment.MaxIndexSizeBytes == 0 {
 		cfg.Segment.MaxIndexSizeBytes = defaultIndexSize
 	}

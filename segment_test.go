@@ -21,7 +21,7 @@ func TestSegmentReadWrite(t *testing.T) {
 	}
 	defer os.Remove(storeFile.Name())
 
-	segment, err := newSegment(idxFile.Name(), storeFile.Name(), configDefautls(Config{}))
+	segment, err := newSegment(idxFile.Name(), storeFile.Name(), defaultConfig(Config{}))
 	if err != nil {
 		t.Fatal(err)
 	}

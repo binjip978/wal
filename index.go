@@ -3,10 +3,13 @@ package wal
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io/ioutil"
 	"os"
 	"sync"
 )
+
+var ErrMaxIndexSize = errors.New("max index size should be multiple by 16")
 
 // index will store mapping between recordID and recordOffset
 // it will maintain it in memory and in index file
@@ -70,6 +73,10 @@ func (i *index) remove() error {
 }
 
 func newIndex(file string, cfg Config) (*index, error) {
+	if cfg.Segment.MaxIndexSizeBytes%16 != 0 {
+		return nil, ErrMaxIndexSize
+	}
+
 	_, err := os.Stat(file)
 	if err != nil {
 		return nil, err

@@ -105,7 +105,7 @@ func TestWalReadWrite(t *testing.T) {
 }
 
 func TestConfigDefaults(t *testing.T) {
-	cfg := configDefautls(Config{})
+	cfg := defaultConfig(Config{})
 	if cfg.Segment.MaxIndexSizeBytes != defaultIndexSize {
 		t.Error("default value for index is not set")
 	}
@@ -118,7 +118,7 @@ func TestConfigDefaults(t *testing.T) {
 	cfg.Segment.MaxIndexSizeBytes = 1000
 	cfg.Segment.MaxStoreSizeBytes = 2000
 
-	cfg = configDefautls(cfg)
+	cfg = defaultConfig(cfg)
 	if cfg.Segment.MaxIndexSizeBytes != 1000 {
 		t.Error("should not change non zero value")
 	}
@@ -127,8 +127,8 @@ func TestConfigDefaults(t *testing.T) {
 	}
 }
 
-func TestConcurentAppends(t *testing.T) {
-	cfg := configDefautls(Config{})
+func TestConcurrentAppends(t *testing.T) {
+	cfg := defaultConfig(Config{})
 	cfg.Segment.MaxIndexSizeBytes = 1 * 2 << 20
 	cfg.Segment.MaxStoreSizeBytes = 1 * 2 << 20
 	tempDir, err := ioutil.TempDir("", "wal-conc")

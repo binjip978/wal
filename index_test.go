@@ -1,6 +1,7 @@
 package wal
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -43,7 +44,7 @@ func TestIndexReadWrite(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 
-	cfg := configDefautls(Config{})
+	cfg := defaultConfig(Config{})
 
 	i1, err := newIndex(f.Name(), cfg)
 	if err != nil {
@@ -91,5 +92,22 @@ func TestIndexReadWrite(t *testing.T) {
 			t.Error("offsets are not the same")
 		}
 	}
+}
 
+func TestMaxIndexSize(t *testing.T) {
+	f, _ := ioutil.TempFile("", "max-index-test")
+	defer os.Remove(f.Name())
+
+	cfg := Config{}
+
+	_, err := newIndex(f.Name(), cfg)
+	if err != nil {
+		t.Error("zero index is valid")
+	}
+
+	cfg.Segment.MaxIndexSizeBytes = 11
+	_, err = newIndex(f.Name(), cfg)
+	if !errors.Is(err, ErrMaxIndexSize) {
+		t.Error("should be ErrMaxIndexSize 11 is not multiple of 16")
+	}
 }

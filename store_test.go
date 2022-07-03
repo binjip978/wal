@@ -19,7 +19,7 @@ func TestStoreReadWrite(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 
-	s, err := newStore(f.Name(), configDefautls(Config{}))
+	s, err := newStore(f.Name(), defaultConfig(Config{}))
 	if err != nil {
 		t.Fatal(err)
 	}
