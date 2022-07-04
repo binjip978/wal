@@ -28,7 +28,7 @@ func benchmarkWrite(msg []byte, b *testing.B) {
 	}
 	b.StopTimer()
 
-	log.Close()
+	_ = log.Close()
 }
 
 func TestWalEmptyDir(t *testing.T) {

@@ -51,7 +51,7 @@ func TestIndexReadWrite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ids := []uint64{}
+	var ids []uint64
 	offsets := []uint64{0, 10, 21}
 
 	for _, offset := range offsets {
@@ -101,8 +101,8 @@ func TestMaxIndexSize(t *testing.T) {
 	cfg := Config{}
 
 	_, err := newIndex(f.Name(), cfg)
-	if err != nil {
-		t.Error("zero index is valid")
+	if err == nil {
+		t.Error("zero index is not valid")
 	}
 
 	cfg.Segment.MaxIndexSizeBytes = 11

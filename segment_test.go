@@ -57,10 +57,10 @@ func TestSegmentReadWrite(t *testing.T) {
 func TestRemoveSegment(t *testing.T) {
 	i, _ := ioutil.TempFile("", "index-remove")
 	s, _ := ioutil.TempFile("", "store-remove")
-	i.Close()
-	s.Close()
+	_ = i.Close()
+	_ = s.Close()
 
-	seg, _ := newSegment(i.Name(), s.Name(), Config{})
+	seg, _ := newSegment(i.Name(), s.Name(), defaultConfig(Config{}))
 	err := seg.remove()
 	if err != nil {
 		t.Error(err)
