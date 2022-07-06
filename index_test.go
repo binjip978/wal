@@ -56,6 +56,9 @@ func TestIndexReadWrite(t *testing.T) {
 
 	for _, offset := range offsets {
 		id, err := i1.write(offset)
+		if id == 0 {
+			t.Error("id should not be zero")
+		}
 		if err != nil {
 			t.Error(err)
 		}
