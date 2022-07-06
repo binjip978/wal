@@ -18,7 +18,7 @@ type store struct {
 }
 
 // newStore returns a new storage
-func newStore(file string, cfg Config) (*store, error) {
+func newStore(file string, cfg *Config) (*store, error) {
 	st, err := os.Stat(file)
 	if err != nil {
 		return nil, err

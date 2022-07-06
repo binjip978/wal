@@ -74,7 +74,7 @@ func (i *index) remove() error {
 	return os.Remove(i.idxFile.Name())
 }
 
-func newIndex(file string, cfg Config) (*index, error) {
+func newIndex(file string, cfg *Config) (*index, error) {
 	if cfg.Segment.MaxIndexSizeBytes == 0 || cfg.Segment.MaxIndexSizeBytes%16 != 0 {
 		return nil, ErrMaxIndexSize
 	}

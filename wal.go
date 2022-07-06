@@ -16,11 +16,6 @@ type WAL struct {
 	mu            sync.Mutex
 }
 
-const (
-	defaultStoreSize = 1 << 10
-	defaultIndexSize = 1 << 10
-)
-
 var (
 	ErrRecordNotFound   = errors.New("record is not found")
 	ErrNoStoreSpaceLeft = errors.New("no store space left")
@@ -31,8 +26,13 @@ var (
 // it will look for files [d+].store and [d+].index
 // if no such files present it will create empty them
 // TODO: multiple segments should be supported
-func New(dir string, cfg Config) (*WAL, error) {
-	cfg = defaultConfig(cfg)
+func New(dir string, cfg *Config) (*WAL, error) {
+	var walConfig = Config{}
+	if cfg == nil {
+		walConfig = defautlConfig
+	} else {
+		walConfig = *cfg
+	}
 
 	fNames, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -48,7 +48,7 @@ func New(dir string, cfg Config) (*WAL, error) {
 			indexPath := filepath.Join(dir, sp[0]+".index")
 			storePath := filepath.Join(dir, fName.Name())
 
-			segment, err := newSegment(indexPath, storePath, cfg)
+			segment, err := newSegment(indexPath, storePath, &walConfig)
 			if err != nil {
 				return nil, fmt.Errorf("can't initiate segment: %w", err)
 			}
@@ -66,16 +66,16 @@ func New(dir string, cfg Config) (*WAL, error) {
 		if err != nil {
 			return nil, err
 		}
-		f.Close()
+		_ = f.Close()
 
 		storePath := filepath.Join(dir, "0001.store")
 		f, err = os.Create(storePath)
 		if err != nil {
 			return nil, err
 		}
-		f.Close()
+		_ = f.Close()
 
-		segment, err := newSegment(indexPath, storePath, cfg)
+		segment, err := newSegment(indexPath, storePath, &walConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -128,15 +128,4 @@ func (w *WAL) Close() error {
 	}
 
 	return nil
-}
-
-func defaultConfig(cfg Config) Config {
-	if cfg.Segment.MaxIndexSizeBytes == 0 {
-		cfg.Segment.MaxIndexSizeBytes = defaultIndexSize
-	}
-	if cfg.Segment.MaxStoreSizeBytes == 0 {
-		cfg.Segment.MaxStoreSizeBytes = defaultStoreSize
-	}
-
-	return cfg
 }

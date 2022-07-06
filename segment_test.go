@@ -21,7 +21,7 @@ func TestSegmentReadWrite(t *testing.T) {
 	}
 	defer os.Remove(storeFile.Name())
 
-	segment, err := newSegment(idxFile.Name(), storeFile.Name(), defaultConfig(Config{}))
+	segment, err := newSegment(idxFile.Name(), storeFile.Name(), &defautlConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestRemoveSegment(t *testing.T) {
 	_ = i.Close()
 	_ = s.Close()
 
-	seg, _ := newSegment(i.Name(), s.Name(), defaultConfig(Config{}))
+	seg, _ := newSegment(i.Name(), s.Name(), &defautlConfig)
 	err := seg.remove()
 	if err != nil {
 		t.Error(err)

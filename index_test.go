@@ -14,7 +14,7 @@ func TestIndexSize(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 
-	cfg := Config{}
+	cfg := &Config{}
 	cfg.Segment.MaxIndexSizeBytes = 16
 
 	i, err := newIndex(f.Name(), cfg)
@@ -44,9 +44,7 @@ func TestIndexReadWrite(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 
-	cfg := defaultConfig(Config{})
-
-	i1, err := newIndex(f.Name(), cfg)
+	i1, err := newIndex(f.Name(), &defautlConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +79,7 @@ func TestIndexReadWrite(t *testing.T) {
 		t.Error(err)
 	}
 
-	i2, err := newIndex(f.Name(), cfg)
+	i2, err := newIndex(f.Name(), &defautlConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,14 +100,13 @@ func TestMaxIndexSize(t *testing.T) {
 	defer os.Remove(f.Name())
 
 	cfg := Config{}
-
-	_, err := newIndex(f.Name(), cfg)
+	_, err := newIndex(f.Name(), &cfg)
 	if err == nil {
 		t.Error("zero index is not valid")
 	}
 
 	cfg.Segment.MaxIndexSizeBytes = 11
-	_, err = newIndex(f.Name(), cfg)
+	_, err = newIndex(f.Name(), &cfg)
 	if !errors.Is(err, ErrMaxIndexSize) {
 		t.Error("should be ErrMaxIndexSize 11 is not multiple of 16")
 	}

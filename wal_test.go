@@ -20,7 +20,7 @@ func benchmarkWrite(msg []byte, b *testing.B) {
 	cfg := Config{}
 	cfg.Segment.MaxIndexSizeBytes = 4 * 2 << 20
 	cfg.Segment.MaxStoreSizeBytes = 16 * 2 << 20
-	log, _ := New(tempDir, cfg)
+	log, _ := New(tempDir, &cfg)
 
 	b.StartTimer()
 	for n := 0; n < b.N; n++ {
@@ -38,7 +38,7 @@ func TestWalEmptyDir(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	wal, err := New(tempDir, Config{})
+	wal, err := New(tempDir, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestWalReadWrite(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	wal, err := New(tempDir, Config{})
+	wal, err := New(tempDir, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,31 +104,8 @@ func TestWalReadWrite(t *testing.T) {
 	}
 }
 
-func TestConfigDefaults(t *testing.T) {
-	cfg := defaultConfig(Config{})
-	if cfg.Segment.MaxIndexSizeBytes != defaultIndexSize {
-		t.Error("default value for index is not set")
-	}
-
-	if cfg.Segment.MaxStoreSizeBytes != defaultStoreSize {
-		t.Error("default value for store is not set")
-	}
-
-	cfg = Config{}
-	cfg.Segment.MaxIndexSizeBytes = 1000
-	cfg.Segment.MaxStoreSizeBytes = 2000
-
-	cfg = defaultConfig(cfg)
-	if cfg.Segment.MaxIndexSizeBytes != 1000 {
-		t.Error("should not change non zero value")
-	}
-	if cfg.Segment.MaxStoreSizeBytes != 2000 {
-		t.Error("should not change non zero value")
-	}
-}
-
 func TestConcurrentAppends(t *testing.T) {
-	cfg := defaultConfig(Config{})
+	cfg := Config{}
 	cfg.Segment.MaxIndexSizeBytes = 1 * 2 << 20
 	cfg.Segment.MaxStoreSizeBytes = 1 * 2 << 20
 	tempDir, err := ioutil.TempDir("", "wal-conc")
@@ -137,7 +114,7 @@ func TestConcurrentAppends(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	wal, err := New(tempDir, cfg)
+	wal, err := New(tempDir, &cfg)
 	if err != nil {
 		t.Fatal(err)
 	}

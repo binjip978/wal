@@ -19,7 +19,7 @@ func TestStoreReadWrite(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 
-	s, err := newStore(f.Name(), defaultConfig(Config{}))
+	s, err := newStore(f.Name(), &defautlConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func TestStoreSize(t *testing.T) {
 	cfg := Config{}
 	cfg.Segment.MaxStoreSizeBytes = 16
 
-	s, err := newStore(f.Name(), cfg)
+	s, err := newStore(f.Name(), &cfg)
 	if err != nil {
 		t.Fatal(err)
 	}

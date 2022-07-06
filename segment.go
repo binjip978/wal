@@ -56,7 +56,7 @@ func (s *segment) remove() error {
 	return s.store.remove()
 }
 
-func newSegment(indexFile string, storeFile string, cfg Config) (*segment, error) {
+func newSegment(indexFile string, storeFile string, cfg *Config) (*segment, error) {
 	index, err := newIndex(indexFile, cfg)
 	if err != nil {
 		return nil, err
