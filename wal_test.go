@@ -269,4 +269,15 @@ func TestReadWriteWithNewSegment(t *testing.T) {
 			t.Error("read is not right")
 		}
 	}
+
+	// remove 1 and 2 segment
+	err = wal.Trim(5)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(wal.segments) != 1 || wal.segments[0].segmentID != "0003" {
+		t.Error("should remove two first segment")
+	}
 }
+

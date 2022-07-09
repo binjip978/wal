@@ -173,6 +173,10 @@ func (w *WAL) Read(id uint64) ([]byte, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
+	if id < w.segments[0].idx.startID {
+		return nil, ErrRecordNotFound
+	}
+
 	// determine correct segment
 	for i := 0; i < len(w.segments)-1; i++ {
 		ls := w.segments[i].idx.startID
@@ -207,6 +211,26 @@ func (w *WAL) Close() error {
 		return err
 	}
 
+	return nil
+}
+
+// Trim remove all segments that startID is less than id
+func (w *WAL) Trim(id uint64) error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	var newSegments []*segment
+
+	for i := 0; i < len(w.segments)-1; i++ {
+		if w.segments[i+1].idx.startID <= id {
+			continue
+		}
+		newSegments = append(newSegments, w.segments[i])
+	}
+
+	newSegments = append(newSegments, w.activeSegment)
+
+	w.segments = newSegments
 	return nil
 }
 
