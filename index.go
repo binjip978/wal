@@ -25,7 +25,7 @@ func (i *index) write(offset uint64) (uint64, error) {
 	ii := (i.id - i.startID) * 16
 
 	if ii >= i.maxSize {
-		return 0, ErrNoIndexSpaceLeft
+		return 0, errNoIndexSpaceLeft
 	}
 
 	binary.BigEndian.PutUint64(i.mm[ii:ii+8], i.id)

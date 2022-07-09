@@ -32,7 +32,7 @@ func TestIndexSize(t *testing.T) {
 	}
 
 	_, err = i.write(16)
-	if err != ErrNoIndexSpaceLeft {
+	if err != errNoIndexSpaceLeft {
 		t.Error("wrong error returned")
 	}
 }

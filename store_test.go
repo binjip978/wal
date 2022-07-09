@@ -72,7 +72,7 @@ func TestStoreSize(t *testing.T) {
 	}
 
 	_, err = s.write([]byte{'a'})
-	if err != ErrNoStoreSpaceLeft {
+	if err != errNoStoreSpaceLeft {
 		t.Error("should return no space left error")
 	}
 }

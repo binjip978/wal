@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,14 +23,14 @@ type WAL struct {
 
 var (
 	ErrRecordNotFound   = errors.New("record is not found")
-	ErrNoStoreSpaceLeft = errors.New("no store space left")
-	ErrNoIndexSpaceLeft = errors.New("no index space left")
+	errNoStoreSpaceLeft = errors.New("no store space left")
+	errNoIndexSpaceLeft = errors.New("no index space left")
 )
 
 // New creates a Write Ahead Log in specified directory
 // it will look for files [d+].store and [d+].index
-// if no such files present it will create empty them
-// TODO: multiple segments should be supported
+// if no such files are present it will create
+// empty ones: 0001.index and 0001.store
 func New(dir string, cfg *Config) (*WAL, error) {
 	var walConfig = Config{}
 	if cfg == nil {
@@ -38,20 +39,23 @@ func New(dir string, cfg *Config) (*WAL, error) {
 		walConfig = *cfg
 	}
 
-	fNames, err := ioutil.ReadDir(dir)
+	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
 
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
+
 	var segments []*segment
 	var startID uint64 = 1
 
-	// TODO: sort files to determine last segment (active one)
-	for _, fName := range fNames {
-		if strings.Contains(fName.Name(), ".store") {
-			sp := strings.Split(fName.Name(), ".")
+	for _, file := range files {
+		if strings.Contains(file.Name(), ".store") {
+			sp := strings.Split(file.Name(), ".")
 			indexPath := filepath.Join(dir, sp[0]+".index")
-			storePath := filepath.Join(dir, fName.Name())
+			storePath := filepath.Join(dir, file.Name())
 
 			//read first 8 bytes from segment file
 			iStat, err := os.Stat(indexPath)
@@ -75,8 +79,6 @@ func New(dir string, cfg *Config) (*WAL, error) {
 					panic("can't read 8 bytes")
 				}
 
-				// TODO: will not work because segments is not yet sorted
-				// but should be sufficient for one segment
 				startID = binary.BigEndian.Uint64(b)
 			}
 
@@ -86,9 +88,6 @@ func New(dir string, cfg *Config) (*WAL, error) {
 			}
 
 			segments = append(segments, segment)
-
-			// TODO: add support for multiple segments
-			break
 		}
 	}
 
@@ -133,7 +132,7 @@ func (w *WAL) Append(data []byte) (uint64, error) {
 
 	id, err := w.activeSegment.write(data)
 	// no more space for index or store, create new one
-	if errors.Is(err, ErrNoIndexSpaceLeft) || errors.Is(err, ErrNoStoreSpaceLeft) {
+	if errors.Is(err, errNoIndexSpaceLeft) || errors.Is(err, errNoStoreSpaceLeft) {
 		nID := nextID(w.activeSegment.segmentID)
 		indexF, err := os.Create(filepath.Join(w.dir, nID+".index"))
 		if err != nil {
@@ -160,13 +159,13 @@ func (w *WAL) Append(data []byte) (uint64, error) {
 			return 0, err
 		}
 
-		return uint64(id), nil
+		return id, nil
 	}
 	if err != nil {
 		return 0, err
 	}
 
-	return uint64(id), nil
+	return id, nil
 }
 
 func (w *WAL) Read(id uint64) ([]byte, error) {

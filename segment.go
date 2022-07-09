@@ -63,7 +63,6 @@ func (s *segment) remove() error {
 }
 
 func newSegment(indexFile string, storeFile string, startID uint64, cfg *Config) (*segment, error) {
-	// TODO: newSegment should now the latest of id the previous segment, remove 1
 	index, err := newIndex(indexFile, cfg, startID)
 	if err != nil {
 		return nil, err

@@ -218,6 +218,8 @@ func TestReadWriteWithNewSegment(t *testing.T) {
 		"fourth",
 		"fifth",
 		"sixth",
+		"seventh",
+		"eights",
 	}
 	var ids []uint64
 
@@ -270,13 +272,45 @@ func TestReadWriteWithNewSegment(t *testing.T) {
 		}
 	}
 
+	// close and reopen
+	err = wal.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wal, err = New(dir, &cfg)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for i := 6; i < 8; i++ {
+		id, err := wal.Append([]byte(records[i]))
+		if err != nil {
+			t.Error(err)
+		}
+		ids = append(ids, id)
+	}
+
+	for i, id := range ids {
+		data, err := wal.Read(id)
+		if err != nil {
+			t.Error(err)
+		}
+		if err != nil {
+			t.Error(err)
+		}
+		if records[i] != string(data) {
+			t.Error("read is not right")
+		}
+	}
+
 	// remove 1 and 2 segment
 	err = wal.Trim(5)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(wal.segments) != 1 || wal.segments[0].segmentID != "0003" {
+	if len(wal.segments) != 2 || wal.segments[0].segmentID != "0003" || wal.segments[1].segmentID != "0004" {
 		t.Error("should remove two first segment")
 	}
 

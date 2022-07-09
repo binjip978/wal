@@ -63,7 +63,7 @@ func (s *store) write(data []byte) (uint64, error) {
 	// TODO: could we possible overflow?
 	// what is maximum slice length?
 	if s.size+uint64(len(data)+8) > s.maxSize {
-		return 0, ErrNoStoreSpaceLeft
+		return 0, errNoStoreSpaceLeft
 	}
 
 	b := make([]byte, 8+len(data))
