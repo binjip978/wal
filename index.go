@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"os"
-	"sync"
 
 	"github.com/edsrzf/mmap-go"
 )
@@ -14,7 +13,6 @@ var ErrMaxIndexSize = errors.New("max index size should be multiple by 16 and mo
 // index will store mapping between recordID and recordOffset
 // it will maintain it in memory and in index file
 type index struct {
-	mu      sync.Mutex
 	mm      mmap.MMap
 	idxFile *os.File
 	maxSize uint64
@@ -24,9 +22,6 @@ type index struct {
 }
 
 func (i *index) write(offset uint64) (uint64, error) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-
 	ii := (i.id - i.startID) * 16
 
 	if ii >= i.maxSize {
@@ -43,9 +38,6 @@ func (i *index) write(offset uint64) (uint64, error) {
 }
 
 func (i *index) read(id uint64) (uint64, error) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-
 	ii := (id - i.startID) * 16
 	if id == 0 || ii >= i.size {
 		return 0, ErrRecordNotFound
@@ -62,16 +54,10 @@ func (i *index) read(id uint64) (uint64, error) {
 }
 
 func (i *index) close() error {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-
 	return i.idxFile.Close()
 }
 
 func (i *index) remove() error {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-
 	return os.Remove(i.idxFile.Name())
 }
 
@@ -126,7 +112,6 @@ func newIndex(file string, cfg *Config, startID uint64) (*index, error) {
 	}
 
 	idx := &index{
-		mu:      sync.Mutex{},
 		mm:      mm,
 		idxFile: f,
 		maxSize: cfg.Segment.MaxIndexSizeBytes,
