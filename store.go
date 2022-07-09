@@ -60,8 +60,6 @@ func (s *store) read(offset uint64) ([]byte, error) {
 
 // write append the record to the log and return
 func (s *store) write(data []byte) (uint64, error) {
-	// TODO: could we possible overflow?
-	// what is maximum slice length?
 	if s.size+uint64(len(data)+8) > s.maxSize {
 		return 0, errNoStoreSpaceLeft
 	}

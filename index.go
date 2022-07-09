@@ -92,13 +92,6 @@ func newIndex(file string, cfg *Config, startID uint64) (*index, error) {
 
 	var size uint64
 	id := startID
-	// id is 1 to be sure that we never see tuple (0, 0) in index
-	// that actually is real index
-
-	// size is a byte offset of the index file
-	// all new writes should go mm[size:size+16]
-	// and size += 16
-	// TODO: better name maybe?
 	for i := 0; i < len(mm); i += 16 {
 		b1 := binary.BigEndian.Uint64(mm[i : i+8])
 		b2 := binary.BigEndian.Uint64(mm[i+8 : i+16])

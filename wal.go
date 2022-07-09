@@ -23,13 +23,14 @@ type WAL struct {
 
 var (
 	ErrRecordNotFound   = errors.New("record is not found")
+	ErrIndexRecordID    = errors.New("cant read record id from index")
 	errNoStoreSpaceLeft = errors.New("no store space left")
 	errNoIndexSpaceLeft = errors.New("no index space left")
 )
 
 // New creates a Write Ahead Log in specified directory
 // it will look for files [d+].store and [d+].index
-// if no such files are present it will create
+// if no such files are present it will create an
 // empty ones: 0001.index and 0001.store
 func New(dir string, cfg *Config) (*WAL, error) {
 	var walConfig = Config{}
@@ -75,8 +76,7 @@ func New(dir string, cfg *Config) (*WAL, error) {
 					return nil, err
 				}
 				if n != 8 {
-					// TODO: should be an error
-					panic("can't read 8 bytes")
+					return nil, ErrIndexRecordID
 				}
 
 				startID = binary.BigEndian.Uint64(b)
@@ -126,6 +126,7 @@ func New(dir string, cfg *Config) (*WAL, error) {
 	return wal, nil
 }
 
+// Append add data to the log returns record id and error if any
 func (w *WAL) Append(data []byte) (uint64, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -168,6 +169,7 @@ func (w *WAL) Append(data []byte) (uint64, error) {
 	return id, nil
 }
 
+// Read returns byte slice for record id and error if any
 func (w *WAL) Read(id uint64) ([]byte, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
