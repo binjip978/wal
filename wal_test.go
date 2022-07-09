@@ -279,5 +279,24 @@ func TestReadWriteWithNewSegment(t *testing.T) {
 	if len(wal.segments) != 1 || wal.segments[0].segmentID != "0003" {
 		t.Error("should remove two first segment")
 	}
-}
 
+	for i := 1; i <= 2; i++ {
+		_, err := os.Stat(fmt.Sprintf("%s/000%d.index", wal.dir, i))
+		if err == nil {
+			t.Error("index is not deleted")
+		}
+		_, err = os.Stat(fmt.Sprintf("%s/000%d.store", wal.dir, i))
+		if err == nil {
+			t.Error("store is not deleted")
+		}
+	}
+
+	_, err = os.Stat(fmt.Sprintf("%s/000%d.store", wal.dir, 3))
+	if err != nil {
+		t.Error("0003.store should stay")
+	}
+	_, err = os.Stat(fmt.Sprintf("%s/000%d.index", wal.dir, 3))
+	if err != nil {
+		t.Error("0003.index should stay")
+	}
+}

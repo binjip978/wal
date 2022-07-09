@@ -223,6 +223,11 @@ func (w *WAL) Trim(id uint64) error {
 
 	for i := 0; i < len(w.segments)-1; i++ {
 		if w.segments[i+1].idx.startID <= id {
+			err := w.segments[i].remove()
+			if err != nil {
+				return err
+			}
+
 			continue
 		}
 		newSegments = append(newSegments, w.segments[i])
