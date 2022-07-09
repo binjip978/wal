@@ -102,6 +102,27 @@ func TestWalReadWrite(t *testing.T) {
 			t.Error("message is the same")
 		}
 	}
+
+	// close and reread
+	err = wal.Close()
+	if err != nil {
+		t.Error(err)
+	}
+
+	wal, err = New(tempDir, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for i, id := range ids {
+		data, err := wal.Read(id)
+		if err != nil {
+			t.Error(err)
+		}
+		if string(data) != messages[i] {
+			t.Error("message is the same")
+		}
+	}
 }
 
 func TestConcurrentAppends(t *testing.T) {
@@ -150,4 +171,102 @@ func TestConcurrentAppends(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestNextID(t *testing.T) {
+	type test struct {
+		input string
+		want  string
+	}
+
+	tests := []test{
+		{"0001", "0002"},
+		{"0009", "0010"},
+		{"0099", "0100"},
+		{"0999", "1000"},
+		{"1000", "1001"},
+	}
+
+	for _, tc := range tests {
+		got := nextID(tc.input)
+		if got != tc.want {
+			t.Errorf("%s != %s", got, tc.want)
+		}
+	}
+}
+
+func TestReadWriteWithNewSegment(t *testing.T) {
+	dir, _ := ioutil.TempDir("", "append-segment")
+	defer os.RemoveAll(dir)
+	cfg := Config{}
+	cfg.Segment.MaxIndexSizeBytes = 32
+	cfg.Segment.MaxStoreSizeBytes = 1024
+
+	wal, err := New(dir, &cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if wal.activeSegment.segmentID != "0001" {
+		t.Error("first segment should be 0001")
+	}
+
+	records := []string{
+		"first",
+		"second",
+		"third",
+		"fourth",
+		"fifth",
+		"sixth",
+	}
+	var ids []uint64
+
+	for i := 0; i < 2; i++ {
+		id, err := wal.Append([]byte(records[i]))
+		if err != nil {
+			t.Error(err)
+		}
+		ids = append(ids, id)
+
+		if wal.activeSegment.segmentID != "0001" {
+			t.Error("first segment should be 0001")
+		}
+	}
+
+	for i := 2; i < 4; i++ {
+		id, err := wal.Append([]byte(records[i]))
+		if err != nil {
+			t.Error(err)
+		}
+		ids = append(ids, id)
+
+		if wal.activeSegment.segmentID != "0002" {
+			t.Error("second segment should be 0002")
+		}
+	}
+
+	for i := 4; i < 6; i++ {
+		id, err := wal.Append([]byte(records[i]))
+		if err != nil {
+			t.Error(err)
+		}
+		ids = append(ids, id)
+
+		if wal.activeSegment.segmentID != "0003" {
+			t.Error("third segment should be 0003")
+		}
+	}
+
+	for i, id := range ids {
+		data, err := wal.Read(id)
+		if err != nil {
+			t.Error(err)
+		}
+		if err != nil {
+			t.Error(err)
+		}
+		if records[i] != string(data) {
+			t.Error("read is not right")
+		}
+	}
 }

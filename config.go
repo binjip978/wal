@@ -14,7 +14,7 @@ type Config struct {
 	}
 }
 
-var defautlConfig = Config{Segment: struct {
+var defaultConfig = Config{Segment: struct {
 	MaxStoreSizeBytes uint64
 	MaxIndexSizeBytes uint64
 }{MaxStoreSizeBytes: defaultStoreSize, MaxIndexSizeBytes: defaultIndexSize}}

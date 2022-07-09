@@ -20,13 +20,14 @@ type index struct {
 	maxSize uint64
 	size    uint64
 	id      uint64
+	startID uint64
 }
 
 func (i *index) write(offset uint64) (uint64, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	ii := (i.id - 1) * 16
+	ii := (i.id - i.startID) * 16
 
 	if ii >= i.maxSize {
 		return 0, ErrNoIndexSpaceLeft
@@ -45,7 +46,7 @@ func (i *index) read(id uint64) (uint64, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	ii := (id - 1) * 16
+	ii := (id - i.startID) * 16
 	if id == 0 || ii >= i.size {
 		return 0, ErrRecordNotFound
 	}
@@ -74,7 +75,11 @@ func (i *index) remove() error {
 	return os.Remove(i.idxFile.Name())
 }
 
-func newIndex(file string, cfg *Config) (*index, error) {
+func newIndex(file string, cfg *Config, startID uint64) (*index, error) {
+	if startID == 0 {
+		panic("recordID should not be zero")
+	}
+
 	if cfg.Segment.MaxIndexSizeBytes == 0 || cfg.Segment.MaxIndexSizeBytes%16 != 0 {
 		return nil, ErrMaxIndexSize
 	}
@@ -100,9 +105,9 @@ func newIndex(file string, cfg *Config) (*index, error) {
 	}
 
 	var size uint64
+	id := startID
 	// id is 1 to be sure that we never see tuple (0, 0) in index
 	// that actually is real index
-	var id uint64 = 1
 
 	// size is a byte offset of the index file
 	// all new writes should go mm[size:size+16]
@@ -127,6 +132,7 @@ func newIndex(file string, cfg *Config) (*index, error) {
 		maxSize: cfg.Segment.MaxIndexSizeBytes,
 		size:    size,
 		id:      id,
+		startID: startID,
 	}
 
 	return idx, nil

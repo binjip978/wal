@@ -9,7 +9,7 @@ import (
 )
 
 func TestSegmentReadWrite(t *testing.T) {
-	idxFile, err := ioutil.TempFile("", "segemet-index-test")
+	idxFile, err := ioutil.TempFile("", "0001.index")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func TestSegmentReadWrite(t *testing.T) {
 	}
 	defer os.Remove(storeFile.Name())
 
-	segment, err := newSegment(idxFile.Name(), storeFile.Name(), &defautlConfig)
+	segment, err := newSegment(idxFile.Name(), storeFile.Name(), 1, &defaultConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,12 +55,12 @@ func TestSegmentReadWrite(t *testing.T) {
 }
 
 func TestRemoveSegment(t *testing.T) {
-	i, _ := ioutil.TempFile("", "index-remove")
-	s, _ := ioutil.TempFile("", "store-remove")
+	i, _ := ioutil.TempFile("", "0001.index-remove")
+	s, _ := ioutil.TempFile("", "0001.store-remove")
 	_ = i.Close()
 	_ = s.Close()
 
-	seg, _ := newSegment(i.Name(), s.Name(), &defautlConfig)
+	seg, _ := newSegment(i.Name(), s.Name(), 1, &defaultConfig)
 	err := seg.remove()
 	if err != nil {
 		t.Error(err)
